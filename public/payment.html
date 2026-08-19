@@ -6,56 +6,151 @@
   <title>Secure Checkout | ZBigHype Academy</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
-  <main class="container section">
-    <div class="checkout-hero">
-      <div class="brand"><span>ZBig</span>Hype Academy</div>
-      <h1>Secure Checkout</h1>
-    </div>
-    <section class="two-col">
-      <div class="panel">
-        <h2>UPI Payment</h2>
-        <p>Scan the QR code using your UPI app.</p>
-        <img src="/assets/payment-qr.png" alt="UPI Payment QR" onerror="this.outerHTML='<div class=&quot;video-placeholder&quot;>QR image unavailable. Please add /public/assets/payment-qr.png.</div>'">
-        <p>Google Pay · PhonePe · Paytm · BHIM</p>
-        <button class="btn btn-primary" id="openModal">I Have Completed Payment</button>
-      </div>
-      <div class="panel">
-        <h2 id="paymentCourse"></h2>
-        <p id="paymentCategory"></p>
-        <div class="course-foot"><span>Amount</span><strong id="paymentAmount"></strong></div>
-        <div class="course-foot"><span>Total</span><strong id="paymentTotal"></strong></div>
-      </div>
+
+  <main>
+
+    <section class="panel">
+      <h2>UPI Payment</h2>
+
+      <p>Scan the QR code using your UPI app.</p>
+
+      <img
+        src="/assets/payment-qr.png"
+        alt="UPI Payment QR"
+        onerror="this.outerHTML='<div class=&quot;video-placeholder&quot;>QR image unavailable. Please add /public/assets/payment-qr.png.</div>'"
+      >
+
+      <p>Google Pay · PhonePe · Paytm · BHIM</p>
+
+      <button
+        class="btn btn-primary"
+        id="openModal"
+        type="button"
+      >
+        I Have Completed Payment
+      </button>
+
+      <a
+        class="btn btn-primary"
+        href="https://github.com/Zeus756653658/NekoLine-T-Shirt/releases/download/pdf_V1.0.0/Roy_Academy_Computer_Science.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="display:inline-block; text-decoration:none;"
+      >
+        📄 DOWNLOAD PDF
+      </a>
+
     </section>
+
+
+    <!-- Payment Confirmation Modal -->
+
     <div class="modal" id="modal">
-      <form class="panel modal-card form" id="payForm">
+
+      <form
+        class="panel modal-card form"
+        id="payForm"
+      >
+
         <h2>Payment Confirmation</h2>
-        <input name="user_name" placeholder="Full Name" required>
-        <input name="email" type="email" placeholder="Email" required>
-        <input name="phone" placeholder="WhatsApp / Mobile Number" required>
-        <input name="transaction_id" placeholder="UTR / Transaction ID" required>
-        <input name="course_slug" type="hidden">
-        <button class="btn btn-primary" type="submit">Submit Confirmation</button>
-        <button type="button" class="btn btn-secondary" id="closeModal">Cancel</button>
+
+        <input
+          name="user_name"
+          placeholder="Full Name"
+          required
+        >
+
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          required
+        >
+
+        <input
+          name="phone"
+          placeholder="WhatsApp / Mobile Number"
+          required
+        >
+
+        <input
+          name="transaction_id"
+          placeholder="UTR / Transaction ID"
+          required
+        >
+
+        <input
+          name="course_slug"
+          type="hidden"
+        >
+
+        <button
+          class="btn btn-primary"
+          type="submit"
+        >
+          Submit Confirmation
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          id="closeModal"
+        >
+          Cancel
+        </button>
+
         <p id="payError"></p>
+
       </form>
+
     </div>
+
   </main>
+
+
+  <!-- Scripts -->
+
   <script src="/js/main.js"></script>
   <script src="/js/payment.js"></script>
+
   <script>
+    const openModal = document.getElementById("openModal");
+    const closeModal = document.getElementById("closeModal");
+    const modal = document.getElementById("modal");
+    const payForm = document.getElementById("payForm");
+    const payError = document.getElementById("payError");
+
     initPayment();
-    openModal.onclick = () => modal.classList.add('open');
-    closeModal.onclick = () => modal.classList.remove('open');
-    payForm.onsubmit = async e => {
+
+    openModal.addEventListener("click", () => {
+      modal.classList.add("open");
+    });
+
+    closeModal.addEventListener("click", () => {
+      modal.classList.remove("open");
+    });
+
+    payForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      payError.textContent = '';
+
+      payError.textContent = "";
+
       try {
         await submitPayment(payForm);
       } catch (err) {
-        payError.textContent = err.message;
+        payError.textContent =
+          err?.message || "Payment confirmation failed.";
       }
-    };
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("open");
+      }
+    });
   </script>
+
 </body>
 </html>
