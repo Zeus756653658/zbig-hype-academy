@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3000;
 const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 const hasDatabaseAuthToken = Boolean(process.env.DATABASE_AUTH_TOKEN);
 const db = hasDatabaseUrl && hasDatabaseAuthToken ? createDb() : null;
+app.locals.db = db;
 
 console.info("[zbig] booting Express app");
 console.info(`[DB] DATABASE_URL configured: ${hasDatabaseUrl}`);
