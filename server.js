@@ -9,6 +9,8 @@ const db = createDb();
 const PORT = process.env.PORT || 3000;
 
 app.locals.db = db;
+console.info("[zbig] booting Express app");
+console.info(`[zbig] db provider: ${process.env.DATABASE_URL ? "cloud" : "local-fallback-dev"}`);
 
 function reviveCourse(row) {
   if (!row) return null;
@@ -134,11 +136,19 @@ app.get("/api/debug/course/:slug", async (req, res) => {
   res.json({ course: reviveCourse(row) });
 });
 
+app.use((error, req, res, next) => {
+  console.error("[zbig] request error:", error.message);
+  if (req.path && req.path.startsWith("/api/")) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+  next(error);
+});
+
 if (require.main === module) {
   ready
     .then(() => app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`)))
     .catch((error) => {
-      console.error(error);
+      console.error("[zbig] startup error:", error.message);
       process.exit(1);
     });
 }
