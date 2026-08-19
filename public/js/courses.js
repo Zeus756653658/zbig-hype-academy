@@ -10,7 +10,7 @@ function renderCourses(target, courses) {
       <div class="course-meta">${escapeHtml(course.category)}</div>
       <h3>${escapeHtml(course.title)}</h3>
       <p>${escapeHtml(course.short_description)}</p>
-      <div class="course-foot"><span>${escapeHtml(course.instructor)}</span><span>${money(course.price)}</span></div>
+      <div class="course-foot"><span>${escapeHtml(course.instructor)}</span><span>${money(course.price)}${course.currency === "INR" ? " INR" : ""}</span></div>
       <a class="btn btn-secondary" href="course.html?slug=${course.slug}">View Course</a>
     </article>`).join("");
 }

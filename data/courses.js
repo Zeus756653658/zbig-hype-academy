@@ -1,5 +1,86 @@
 module.exports = [
   {
+    slug: "computer-science-complete-foundation",
+    title: "Computer Science — Complete Foundation",
+    short_description: "A complete beginner-to-intermediate Computer Science course covering computer fundamentals, programming, algorithms, databases, networking, cybersecurity, cloud computing, and AI fundamentals.",
+    full_description: "This complete foundation course takes you from the core building blocks of computers all the way to modern software, data, cloud, and AI concepts. You will learn how hardware and operating systems work, how to program, how to think about algorithms and data structures, how web systems and databases are structured, and how networking, security, cloud, and AI fit into a modern technology career.",
+    instructor: "ZBigHype Academy Faculty",
+    duration: "18h 00m",
+    lessons_count: 36,
+    level: "Beginner",
+    price: 5000,
+    currency: "INR",
+    category: "Technology",
+    image: "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=1200&q=80",
+    pdfUrl: "https://github.com/Zeus756653658/NekoLine-T-Shirt/releases/download/pdf_V1.0.0/Roy_Academy_Computer_Science.pdf",
+    learning_outcomes: [
+      "Understand how computers, operating systems, and data representation work",
+      "Write and debug foundational code in Python, JavaScript, and C/C++",
+      "Apply core data structures and algorithms to solve problems",
+      "Build a clear mental model of web, database, networking, cloud, and AI systems"
+    ],
+    requirements: [
+      "Curiosity about how technology works",
+      "A computer with internet access",
+      "No prior programming experience required"
+    ],
+    modules: [
+      {
+        id: "m1",
+        title: "Computer Fundamentals",
+        lessons: [
+          { id: "cs-m1-l1", title: "What is a computer?", duration: "14m" },
+          { id: "cs-m1-l2", title: "Hardware vs software", duration: "18m" },
+          { id: "cs-m1-l3", title: "CPU, RAM, storage, and data representation", duration: "25m" }
+        ]
+      },
+      {
+        id: "m2",
+        title: "Programming",
+        lessons: [
+          { id: "cs-m2-l1", title: "Programming fundamentals", duration: "22m" },
+          { id: "cs-m2-l2", title: "Variables, conditions, loops, and functions", duration: "28m" },
+          { id: "cs-m2-l3", title: "OOP, Python, JavaScript, C/C++, debugging, Git, and GitHub", duration: "32m" }
+        ]
+      },
+      {
+        id: "m3",
+        title: "Algorithms & Data Structures",
+        lessons: [
+          { id: "cs-m3-l1", title: "Arrays, linked lists, stack, and queue", duration: "24m" },
+          { id: "cs-m3-l2", title: "Hash tables, trees, graphs, searching, and sorting", duration: "30m" },
+          { id: "cs-m3-l3", title: "Big-O complexity", duration: "16m" }
+        ]
+      },
+      {
+        id: "m4",
+        title: "Web Development and Databases",
+        lessons: [
+          { id: "cs-m4-l1", title: "HTML, CSS, JavaScript, frontend, and backend", duration: "26m" },
+          { id: "cs-m4-l2", title: "REST APIs, JSON, HTTP/HTTPS, and authentication", duration: "24m" },
+          { id: "cs-m4-l3", title: "Relational databases, SQL, CRUD, transactions, and security", duration: "29m" }
+        ]
+      },
+      {
+        id: "m5",
+        title: "Networking, Security, Cloud, and AI",
+        lessons: [
+          { id: "cs-m5-l1", title: "LAN/WAN, IP, MAC, DNS, DHCP, routers, and switches", duration: "28m" },
+          { id: "cs-m5-l2", title: "CIA triad, authentication, authorization, encryption, hashing, MFA, and phishing", duration: "27m" },
+          { id: "cs-m5-l3", title: "Cloud concepts, deployment, serverless, and AI fundamentals", duration: "31m" }
+        ]
+      },
+      {
+        id: "m6",
+        title: "Career Roadmap",
+        lessons: [
+          { id: "cs-m6-l1", title: "Software engineering and web development paths", duration: "18m" },
+          { id: "cs-m6-l2", title: "Data/AI, cybersecurity, and cloud/DevOps paths", duration: "19m" }
+        ]
+      }
+    ]
+  },
+  {
     slug: "founder-systems-blueprint",
     title: "Founder Systems Blueprint",
     short_description: "Build operating systems for ideas, teams, and execution.",
