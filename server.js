@@ -5,12 +5,35 @@ const courseSeed = require("./data/courses");
 const { createDb, getOne, run } = require("./lib/db");
 
 const app = express();
-const db = createDb();
 const PORT = process.env.PORT || 3000;
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const hasDatabaseAuthToken = Boolean(process.env.DATABASE_AUTH_TOKEN);
+const db = hasDatabaseUrl && hasDatabaseAuthToken ? createDb() : null;
 
-app.locals.db = db;
 console.info("[zbig] booting Express app");
-console.info(`[zbig] db provider: ${process.env.DATABASE_URL ? "cloud" : "local-fallback-dev"}`);
+console.info(`[DB] DATABASE_URL configured: ${hasDatabaseUrl}`);
+console.info(`[DB] DATABASE_AUTH_TOKEN configured: ${hasDatabaseAuthToken}`);
+console.info(`[zbig] db provider: ${hasDatabaseUrl ? "cloud" : "unconfigured"}`);
+
+if (db) {
+  db.execute({ sql: "SELECT 1" })
+    .then(() => console.info("[DB] connection test: success"))
+    .catch((error) => {
+      console.info("[DB] connection test: failure");
+      logSafeDatabaseError("startup connection test failed", error);
+    });
+}
+
+function getMissingDatabaseConfig() {
+  const missing = [];
+  if (!hasDatabaseUrl) missing.push("DATABASE_URL");
+  if (!hasDatabaseAuthToken) missing.push("DATABASE_AUTH_TOKEN");
+  return missing;
+}
+
+function logSafeDatabaseError(scope, error) {
+  console.error(`[DB] ${scope}:`, error);
+}
 
 function reviveCourse(row) {
   if (!row) return null;
@@ -22,16 +45,21 @@ function reviveCourse(row) {
   };
 }
 
-async function initDb() {
-  await run(db, `
-    CREATE TABLE IF NOT EXISTS users (
+async function initDb(client = db) {
+  if (!client) {
+    throw new Error("Database client is not configured.");
+  }
+
+  console.info("[zbig][db] initializing schema");
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS courses (
+    )`,
+    `CREATE TABLE IF NOT EXISTS courses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       slug TEXT NOT NULL UNIQUE,
       title TEXT NOT NULL,
@@ -47,8 +75,8 @@ async function initDb() {
       learning_outcomes TEXT,
       requirements TEXT,
       modules TEXT
-    );
-    CREATE TABLE IF NOT EXISTS payment_confirmations (
+    )`,
+    `CREATE TABLE IF NOT EXISTS payment_confirmations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_name TEXT NOT NULL,
       email TEXT NOT NULL,
@@ -58,16 +86,16 @@ async function initDb() {
       amount REAL NOT NULL,
       status TEXT NOT NULL DEFAULT 'Pending Verification',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS enrollments (
+    )`,
+    `CREATE TABLE IF NOT EXISTS enrollments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       course_slug TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
       enrolled_at TEXT DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, course_slug)
-    );
-    CREATE TABLE IF NOT EXISTS lesson_progress (
+    )`,
+    `CREATE TABLE IF NOT EXISTS lesson_progress (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       course_slug TEXT NOT NULL,
@@ -75,33 +103,82 @@ async function initDb() {
       completed INTEGER DEFAULT 0,
       completed_at TEXT,
       UNIQUE(user_id, course_slug, lesson_id)
-    );
-  `);
+    )`
+  ];
 
-  const count = await getOne(db, "SELECT COUNT(*) AS count FROM courses");
-  if (!count || Number(count.count) === 0) {
-    for (const course of courseSeed) {
-      await run(
-        db,
-        "INSERT INTO courses (slug, title, short_description, full_description, instructor, duration, lessons_count, level, price, category, image, learning_outcomes, requirements, modules) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          course.slug,
-          course.title,
-          course.short_description,
-          course.full_description,
-          course.instructor,
-          course.duration,
-          course.lessons_count,
-          course.level,
-          course.price,
-          course.category,
-          course.image,
-          JSON.stringify(course.learning_outcomes),
-          JSON.stringify(course.requirements),
-          JSON.stringify(course.modules)
-        ]
-      );
-    }
+  for (const sql of statements) {
+    await run(client, sql);
+  }
+
+  console.info("[zbig][db] seeding courses idempotently");
+  for (const course of courseSeed) {
+    await run(
+      client,
+      `INSERT INTO courses (
+        slug, title, short_description, full_description, instructor,
+        duration, lessons_count, level, price, category, image,
+        learning_outcomes, requirements, modules
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(slug) DO UPDATE SET
+        title = excluded.title,
+        short_description = excluded.short_description,
+        full_description = excluded.full_description,
+        instructor = excluded.instructor,
+        duration = excluded.duration,
+        lessons_count = excluded.lessons_count,
+        level = excluded.level,
+        price = excluded.price,
+        category = excluded.category,
+        image = excluded.image,
+        learning_outcomes = excluded.learning_outcomes,
+        requirements = excluded.requirements,
+        modules = excluded.modules`,
+      [
+        course.slug,
+        course.title,
+        course.short_description,
+        course.full_description,
+        course.instructor,
+        course.duration,
+        course.lessons_count,
+        course.level,
+        course.price,
+        course.category,
+        course.image,
+        JSON.stringify(course.learning_outcomes),
+        JSON.stringify(course.requirements),
+        JSON.stringify(course.modules)
+      ]
+    );
+  }
+  const seededCount = await getOne(client, "SELECT COUNT(*) AS count FROM courses");
+  console.info(`[zbig][db] course count after seed sync: ${Number(seededCount.count)}`);
+}
+
+async function diagnoseDatabase() {
+  const missing = getMissingDatabaseConfig();
+  if (missing.length > 0) {
+    return { status: 503, body: { ok: false, database: "configuration_error", missing } };
+  }
+
+  const client = createDb();
+
+  try {
+    await client.execute({ sql: "SELECT 1" });
+    console.info("[DB] connection test: success");
+  } catch (error) {
+    console.info("[DB] connection test: failure");
+    logSafeDatabaseError("connection test failed", error);
+    return { status: 503, body: { ok: false, database: "connection_error" } };
+  }
+
+  try {
+    await initDb(client);
+    const row = await getOne(client, "SELECT COUNT(*) AS count FROM courses");
+    return { status: 200, body: { ok: true, database: "connected", courses: Number(row.count) } };
+  } catch (error) {
+    logSafeDatabaseError("bootstrap/query failed", error);
+    return { status: 503, body: { ok: false, database: "query_error" } };
   }
 }
 
@@ -109,13 +186,17 @@ app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 app.use(express.static(path.join(__dirname, "public")));
 
-const ready = initDb();
+const ready = db ? initDb() : Promise.resolve();
 
 app.use(async (req, res, next) => {
+  if (req.path === "/api/health") {
+    return next();
+  }
   try {
     await ready;
     next();
   } catch (error) {
+    console.error("[zbig] bootstrap error:", error.message);
     next(error);
   }
 });
@@ -125,6 +206,11 @@ app.use("/api/courses", require("./routes/courses"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/learn", require("./routes/learning"));
 app.use("/api/payment", require("./routes/payments"));
+
+app.get("/api/health", async (req, res) => {
+  const result = await diagnoseDatabase();
+  res.status(result.status).json(result.body);
+});
 
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/")) return res.status(404).json({ error: "API route not found" });
@@ -137,7 +223,7 @@ app.get("/api/debug/course/:slug", async (req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  console.error("[zbig] request error:", error.message);
+  console.error("[zbig] request error:", error);
   if (req.path && req.path.startsWith("/api/")) {
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -148,7 +234,7 @@ if (require.main === module) {
   ready
     .then(() => app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`)))
     .catch((error) => {
-      console.error("[zbig] startup error:", error.message);
+      console.error("[zbig] startup error:", error);
       process.exit(1);
     });
 }

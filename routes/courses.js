@@ -12,21 +12,31 @@ function revive(row) {
 }
 
 router.get("/", async (req, res) => {
-  const db = req.app.locals.db;
-  const { q = "", category = "" } = req.query;
-  const params = [];
-  let sql = "SELECT * FROM courses WHERE 1=1";
-  if (q) { sql += " AND (LOWER(title) LIKE ? OR LOWER(short_description) LIKE ?)"; params.push(`%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`); }
-  if (category) { sql += " AND category = ?"; params.push(category); }
-  sql += " ORDER BY id DESC";
-  res.json({ courses: (await getAll(db, sql, params)).map(revive) });
+  try {
+    const db = req.app.locals.db;
+    const { q = "", category = "" } = req.query;
+    const params = [];
+    let sql = "SELECT * FROM courses WHERE 1=1";
+    if (q) { sql += " AND (LOWER(title) LIKE ? OR LOWER(short_description) LIKE ?)"; params.push(`%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`); }
+    if (category) { sql += " AND category = ?"; params.push(category); }
+    sql += " ORDER BY id DESC";
+    res.json({ courses: (await getAll(db, sql, params)).map(revive) });
+  } catch (error) {
+    console.error("[zbig][courses] list failed:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.get("/:slug", async (req, res) => {
-  const db = req.app.locals.db;
-  const course = await getOne(db, "SELECT * FROM courses WHERE slug = ?", [req.params.slug]);
-  if (!course) return res.status(404).json({ error: "Course not found" });
-  res.json(revive(course));
+  try {
+    const db = req.app.locals.db;
+    const course = await getOne(db, "SELECT * FROM courses WHERE slug = ?", [req.params.slug]);
+    if (!course) return res.status(404).json({ error: "Course not found" });
+    res.json(revive(course));
+  } catch (error) {
+    console.error("[zbig][courses] detail failed:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 module.exports = router;
