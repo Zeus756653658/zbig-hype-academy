@@ -11,7 +11,7 @@ module.exports = [
     price: 5000,
     currency: "INR",
     category: "Technology",
-    image: "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=1200&q=80",
+    image: "https://images.unsplash.com/photo-1628258334105-2a0b3d6efee1?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
     pdfUrl: "https://github.com/Zeus756653658/NekoLine-T-Shirt/releases/download/pdf_V1.0.0/Roy_Academy_Computer_Science.pdf",
     learning_outcomes: [
       "Understand how computers, operating systems, and data representation work",
