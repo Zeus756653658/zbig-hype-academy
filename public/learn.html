@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn | ZBigHype Academy</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="container section">
+    <h1 id="learnTitle"></h1>
+    <div class="progress"><span id="learningProgress" style="width:0%"></span></div>
+    <section class="two-col" style="margin-top:20px">
+      <div>
+        <div class="video-placeholder">
+          <div>
+            <h2 id="currentLesson"></h2>
+            <p id="lessonDuration"></p>
+          </div>
+        </div>
+        <div class="nav-actions" style="margin-top:18px">
+          <button class="btn btn-secondary" id="prevBtn">Previous</button>
+          <button class="btn btn-primary" id="markComplete">Mark Complete</button>
+          <button class="btn btn-secondary" id="nextBtn">Next</button>
+        </div>
+      </div>
+      <aside class="panel" id="lessonList"></aside>
+    </section>
+  </main>
+  <script src="/js/main.js"></script>
+  <script src="/js/learning.js"></script>
+  <script>
+    initLearning();
+    prevBtn.onclick = () => {
+      if (learningState.currentIndex > 0) {
+        learningState.currentIndex--;
+        renderLearning();
+      }
+    };
+    nextBtn.onclick = () => {
+      if (learningState.currentIndex < learningState.lessons.length - 1) {
+        learningState.currentIndex++;
+        renderLearning();
+      }
+    };
+  </script>
+</body>
+</html>
