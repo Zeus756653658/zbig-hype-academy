@@ -107,6 +107,17 @@ app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 app.use(express.static(path.join(__dirname, "public")));
 
+const ready = initDb();
+
+app.use(async (req, res, next) => {
+  try {
+    await ready;
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/courses", require("./routes/courses"));
 app.use("/api/dashboard", require("./routes/dashboard"));
@@ -124,7 +135,7 @@ app.get("/api/debug/course/:slug", async (req, res) => {
 });
 
 if (require.main === module) {
-  initDb()
+  ready
     .then(() => app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`)))
     .catch((error) => {
       console.error(error);
@@ -132,4 +143,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { app, initDb, reviveCourse };
+module.exports = app;
